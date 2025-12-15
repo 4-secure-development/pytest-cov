@@ -48,14 +48,17 @@ def _fix_html_for_azure_devops(html_dir):
             
             # Only process files that contain <main id="source">
             # These are the source code display files (e.g., module_py.html)
+            # Note: Coverage HTML templates ensure these files have exactly one
+            # <main> element (with id="source"), so replacing </main> is safe
             if '<main id="source">' in content:
                 # Replace the opening tag
                 content = content.replace('<main id="source">', '<div id="source">')
-                # Replace the closing tag (there should be only one </main> in these files)
+                # Replace the closing tag (only one </main> exists in these files)
                 content = content.replace('</main>', '</div>')
                 html_file.write_text(content, encoding='utf-8')
-        except Exception:
-            # Silently continue if any file fails to process
+        except (OSError, UnicodeDecodeError, UnicodeEncodeError):
+            # Silently continue if file cannot be read or written
+            # This ensures coverage report generation is never interrupted
             pass
 
 
