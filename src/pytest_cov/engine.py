@@ -25,6 +25,34 @@ class BrokenCovConfigError(Exception):
     pass
 
 
+def _fix_html_for_azure_devops(html_dir):
+    """
+    Fix HTML coverage reports for AzureDevOps compatibility.
+    
+    AzureDevOps requires <div> tags instead of <main> tags for proper display.
+    This function replaces <main id="source"> with <div id="source"> and 
+    </main> with </div> in all generated HTML files.
+    """
+    if html_dir is None:
+        return
+    
+    html_path = Path(html_dir)
+    if not html_path.exists():
+        return
+    
+    # Process all HTML files in the directory
+    for html_file in html_path.glob('*.html'):
+        try:
+            content = html_file.read_text(encoding='utf-8')
+            # Replace opening and closing tags
+            content = content.replace('<main id="source">', '<div id="source">')
+            content = content.replace('</main>', '</div>')
+            html_file.write_text(content, encoding='utf-8')
+        except Exception:
+            # Silently continue if any file fails to process
+            pass
+
+
 class _NullFile:
     @staticmethod
     def write(v):
@@ -205,7 +233,10 @@ class CovController:
             output = self.cov_report['html']
             with _backup(self.cov, 'config'):
                 total = self.cov.html_report(ignore_errors=True, directory=output)
-            stream.write(f'Coverage HTML written to dir {self.cov.config.html_dir if output is None else output}\n')
+            html_dir = self.cov.config.html_dir if output is None else output
+            stream.write(f'Coverage HTML written to dir {html_dir}\n')
+            # Fix HTML for AzureDevOps compatibility
+            _fix_html_for_azure_devops(html_dir)
 
         # Produce xml report if wanted.
         if 'xml' in self.cov_report:
