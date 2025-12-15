@@ -29,9 +29,10 @@ def _fix_html_for_azure_devops(html_dir):
     """
     Fix HTML coverage reports for AzureDevOps compatibility.
     
-    AzureDevOps requires <div> tags instead of <main> tags for proper display.
-    This function replaces <main id="source"> with <div id="source"> and 
-    </main> with </div> in all generated HTML files.
+    AzureDevOps requires <div> tags instead of <main> tags for proper display
+    of source code coverage. This function replaces <main id="source"> with 
+    <div id="source"> and its corresponding </main> with </div> in files
+    that display source code.
     """
     if html_dir is None:
         return
@@ -44,10 +45,15 @@ def _fix_html_for_azure_devops(html_dir):
     for html_file in html_path.glob('*.html'):
         try:
             content = html_file.read_text(encoding='utf-8')
-            # Replace opening and closing tags
-            content = content.replace('<main id="source">', '<div id="source">')
-            content = content.replace('</main>', '</div>')
-            html_file.write_text(content, encoding='utf-8')
+            
+            # Only process files that contain <main id="source">
+            # These are the source code display files (e.g., module_py.html)
+            if '<main id="source">' in content:
+                # Replace the opening tag
+                content = content.replace('<main id="source">', '<div id="source">')
+                # Replace the closing tag (there should be only one </main> in these files)
+                content = content.replace('</main>', '</div>')
+                html_file.write_text(content, encoding='utf-8')
         except Exception:
             # Silently continue if any file fails to process
             pass
