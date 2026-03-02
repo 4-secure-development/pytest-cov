@@ -150,11 +150,9 @@ class CovController:
     @_ensure_topdir
     def summary(self, stream):
         """Produce coverage reports."""
-        total = None
 
-        if not self.cov_report:
-            with _backup(self.cov, 'config'):
-                return self.cov.report(show_missing=True, ignore_errors=True, file=_NullFile)
+        with _backup(self.cov, 'config'):
+            total = self.cov.report(ignore_errors=True, output_format='total', file=_NullFile)
 
         # Output coverage section header.
         if len(self.node_descs) == 1:
@@ -182,7 +180,7 @@ class CovController:
             skip_covered = isinstance(self.cov_report, dict) and 'skip-covered' in self.cov_report.values()
             options.update({'skip_covered': skip_covered or None})
             with _backup(self.cov, 'config'):
-                total = self.cov.report(**options)
+                self.cov.report(**options)
 
         # Produce annotated source code report if wanted.
         if 'annotate' in self.cov_report:
@@ -194,7 +192,7 @@ class CovController:
             # Coverage.annotate don't return any total and we need it for --cov-fail-under.
 
             with _backup(self.cov, 'config'):
-                total = self.cov.report(ignore_errors=True, file=_NullFile)
+                self.cov.report(ignore_errors=True, file=_NullFile)
             if annotate_dir:
                 stream.write(f'Coverage annotated source written to dir {annotate_dir}\n')
             else:
@@ -204,21 +202,21 @@ class CovController:
         if 'html' in self.cov_report:
             output = self.cov_report['html']
             with _backup(self.cov, 'config'):
-                total = self.cov.html_report(ignore_errors=True, directory=output)
+                self.cov.html_report(ignore_errors=True, directory=output)
             stream.write(f'Coverage HTML written to dir {self.cov.config.html_dir if output is None else output}\n')
 
         # Produce xml report if wanted.
         if 'xml' in self.cov_report:
             output = self.cov_report['xml']
             with _backup(self.cov, 'config'):
-                total = self.cov.xml_report(ignore_errors=True, outfile=output)
+                self.cov.xml_report(ignore_errors=True, outfile=output)
             stream.write(f'Coverage XML written to file {self.cov.config.xml_output if output is None else output}\n')
 
         # Produce json report if wanted
         if 'json' in self.cov_report:
             output = self.cov_report['json']
             with _backup(self.cov, 'config'):
-                total = self.cov.json_report(ignore_errors=True, outfile=output)
+                self.cov.json_report(ignore_errors=True, outfile=output)
             stream.write('Coverage JSON written to file %s\n' % (self.cov.config.json_output if output is None else output))
 
         # Produce Markdown report if wanted.
@@ -226,7 +224,7 @@ class CovController:
             output = self.cov_report['markdown']
             with _backup(self.cov, 'config'):
                 with Path(output).open('w') as output_file:
-                    total = self.cov.report(ignore_errors=True, file=output_file, output_format='markdown')
+                    self.cov.report(ignore_errors=True, file=output_file, output_format='markdown')
             stream.write(f'Coverage Markdown information written to file {output}\n')
 
         # Produce Markdown report if wanted, appending to output file
@@ -234,7 +232,7 @@ class CovController:
             output = self.cov_report['markdown-append']
             with _backup(self.cov, 'config'):
                 with Path(output).open('a') as output_file:
-                    total = self.cov.report(ignore_errors=True, file=output_file, output_format='markdown')
+                    self.cov.report(ignore_errors=True, file=output_file, output_format='markdown')
             stream.write(f'Coverage Markdown information appended to file {output}\n')
 
         # Produce lcov report if wanted.
@@ -245,7 +243,7 @@ class CovController:
 
                 # We need to call Coverage.report here, just to get the total
                 # Coverage.lcov_report doesn't return any total and we need it for --cov-fail-under.
-                total = self.cov.report(ignore_errors=True, file=_NullFile)
+                self.cov.report(ignore_errors=True, file=_NullFile)
 
             stream.write(f'Coverage LCOV written to file {self.cov.config.lcov_output if output is None else output}\n')
 

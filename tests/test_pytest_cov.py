@@ -494,6 +494,28 @@ def test_cov_min_50(testdir):
     result.stdout.fnmatch_lines(['Required test coverage of 50% reached. Total coverage: *%'])
 
 
+def test_cov_reporting_bug_641(testdir, monkeypatch):
+    testdir.tmpdir.mkdir('src').join('foo.py').write('')
+    testdir.tmpdir.mkdir('tests').join('test_foo.py').write("""
+import foo
+
+def test_foo():
+    pass
+""")
+    testdir.tmpdir.join('.coveragerc').write("""
+[run]
+relative_files = True
+source = src, tests
+""")
+    monkeypatch.setitem(os.environ, 'PYTHONPATH', os.pathsep.join([os.environ.get('PYTHONPATH', ''), 'src']))
+    result = testdir.runpytest('-v', '--cov=src', '--cov-report=xml', '--cov-fail-under=100')
+    assert result.ret == 0
+    result.stdout.fnmatch_lines(['Required test coverage of 100% reached. Total coverage: *%'])
+    result = testdir.runpytest('-v', '--cov=src', '--cov-report=', '--cov-fail-under=100')
+    assert result.ret == 0
+    result.stdout.fnmatch_lines(['Required test coverage of 100% reached. Total coverage: *%'])
+
+
 def test_cov_min_float_value(testdir):
     script = testdir.makepyfile(SCRIPT)
 

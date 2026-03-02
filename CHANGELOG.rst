@@ -2,6 +2,12 @@
 Changelog
 =========
 
+
+* Fixed total coverage computation to always be consistent, regardless of reporting settings.
+  Previously some reports could produce different total counts, and consequently can make --cov-fail-under behave different depending on
+  reporting options.
+  See `#641 <https://github.com/pytest-dev/pytest-cov/issues/641>`_.
+
 * Improve handling of ResourceWarning from sqlite3.
 
   The plugin adds warning filter for sqlite3 ``ResourceWarning`` unclosed database (since 6.2.0).
